@@ -193,7 +193,7 @@ export default function Home() {
 
 
 
-  const renderTable = (data)=>{
+  const renderTable = (data: any[]) => {
 
 
     if(!data.length) return null;
