@@ -14,7 +14,10 @@ export default function Home() {
 
   const [loading, setLoading] = useState(false);
 
-  const [stats, setStats] = useState(null);
+  const [stats, setStats] = useState<{
+    imported: number;
+    skipped: number;
+  } | null>(null);
 
 
 
