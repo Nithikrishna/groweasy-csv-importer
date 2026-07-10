@@ -1,191 +1,119 @@
-"use client";
+require("dotenv").config();
 
-import { useState } from "react";
+const express = require("express");
+const cors = require("cors");
+const multer = require("multer");
+const csv = require("csv-parser");
+const { Readable } = require("stream");
 
-export default function Home() {
-  const [file, setFile] = useState<File | null>(null);
+const { extractCRMData } = require("./services/aiService");
 
-  const [previewData, setPreviewData] = useState<any[]>([]);
+const app = express();
 
-  const [resultData, setResultData] = useState<any[]>([]);
+// Middleware
+app.use(
+  cors({
+    origin: "*",
+  })
+);
 
-  const [message, setMessage] = useState("");
+app.use(express.json());
 
-  const [loading, setLoading] = useState(false);
+// Store uploaded CSV in memory
+const storage = multer.memoryStorage();
 
-  const [stats, setStats] = useState<{
-    imported: number;
-    skipped: number;
-  } | null>(null);
+const upload = multer({
+  storage,
+});
 
-  const handleUpload = async () => {
-    if (!file) {
-      setMessage("Please select a CSV file first");
-      return;
-    }
+// -----------------------------
+// Test Route
+// -----------------------------
+app.get("/", (req, res) => {
+  res.send("Backend is running!");
+});
 
-    const formData = new FormData();
-    formData.append("file", file);
+// -----------------------------
+// CSV Upload & Preview
+// -----------------------------
+app.post("/upload", upload.single("file"), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({
+      success: false,
+      message: "No file uploaded",
+    });
+  }
 
-    try {
-      setLoading(true);
-      setMessage("Uploading CSV...");
+  const records = [];
 
-      const response = await fetch(
-        "https://groweasy-backend-wpmu.onrender.com/upload",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+  Readable.from(req.file.buffer)
+    .pipe(csv())
+    .on("data", (row) => {
+      records.push(row);
+    })
+    .on("end", () => {
+      console.log("CSV Preview");
+      console.log(records);
 
-      const data = await response.json();
-
-      if (data.success) {
-        setPreviewData(data.records);
-        setMessage("CSV uploaded successfully. Review and confirm import.");
-      } else {
-        setMessage(data.message);
-      }
-    } catch (error) {
+      res.json({
+        success: true,
+        message: "CSV parsed successfully",
+        records,
+      });
+    })
+    .on("error", (error) => {
       console.log(error);
-      setMessage("Upload failed");
-    } finally {
-      setLoading(false);
+
+      res.status(500).json({
+        success: false,
+        message: "CSV parsing failed",
+      });
+    });
+});
+
+// -----------------------------
+// AI Extraction
+// -----------------------------
+app.post("/extract", async (req, res) => {
+  try {
+    const records = req.body.records;
+
+    if (!records || records.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No records received",
+      });
     }
-  };
 
-  const handleConfirm = async () => {
-    try {
-      setLoading(true);
-      setMessage("AI is processing your CSV...");
+    console.log("Sending records to Gemini...");
 
-      const response = await fetch(
-        "https://groweasy-backend-wpmu.onrender.com/extract",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            records: previewData,
-          }),
-        }
-      );
+    const aiResult = await extractCRMData(records);
 
-      const data = await response.json();
+    console.log("AI Result");
+    console.log(aiResult);
 
-      if (data.success) {
-        setResultData(data.data);
+    res.json({
+      success: true,
+      message: "AI extraction completed",
+      imported: aiResult.length,
+      skipped: records.length - aiResult.length,
+      data: aiResult,
+    });
+  } catch (error) {
+    console.log(error);
 
-        setStats({
-          imported: data.imported,
-          skipped: data.skipped,
-        });
+    res.status(500).json({
+      success: false,
+      message: "AI extraction failed",
+    });
+  }
+});
 
-        setMessage("Import completed successfully!");
-      } else {
-        setMessage(data.message);
-      }
-    } catch (error) {
-      console.log(error);
-      setMessage("AI processing failed");
-    } finally {
-      setLoading(false);
-    }
-  };
+// -----------------------------
+// Start Server
+// -----------------------------
+const PORT = process.env.PORT || 5000;
 
-  const renderTable = (data: any[]) => {
-    if (!data.length) return null;
-
-    return (
-      <div className="table-container">
-        <table>
-          <thead>
-            <tr>
-              {Object.keys(data[0]).map((key) => (
-                <th key={key}>{key}</th>
-              ))}
-            </tr>
-          </thead>
-
-          <tbody>
-            {data.map((row, index) => (
-              <tr key={index}>
-                {Object.values(row as Record<string, unknown>).map(
-                  (value, i) => (
-                    <td key={i}>{String(value ?? "")}</td>
-                  )
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
-  };
-    return (
-    <main className="container">
-      <h1>🤖 AI CSV Importer</h1>
-
-      <p className="subtitle">
-        Upload CSV files and automatically convert them into GrowEasy CRM
-        format.
-      </p>
-
-      <section className="card">
-        <h2>Step 1: Upload CSV</h2>
-
-        <input
-          type="file"
-          accept=".csv"
-          onChange={(e) => {
-            if (e.target.files && e.target.files.length > 0) {
-              setFile(e.target.files[0]);
-            }
-          }}
-        />
-
-        {file && <p>Selected file: {file.name}</p>}
-
-        <button onClick={handleUpload} disabled={loading}>
-          Upload CSV
-        </button>
-      </section>
-
-      {previewData.length > 0 && (
-        <section className="card">
-          <h2>Step 2: CSV Preview</h2>
-
-          {renderTable(previewData)}
-
-          <button onClick={handleConfirm} disabled={loading}>
-            Confirm Import
-          </button>
-        </section>
-      )}
-
-      {loading && <div className="loading">Processing...</div>}
-
-      {resultData.length > 0 && (
-        <section className="card">
-          <h2>Step 3: CRM Result</h2>
-
-          {renderTable(resultData)}
-
-          {stats && (
-            <div className="stats">
-              <h3>Import Summary</h3>
-
-              <p>✅ Imported: {stats.imported}</p>
-
-              <p>⚠️ Skipped: {stats.skipped}</p>
-            </div>
-          )}
-        </section>
-      )}
-
-      <h3 className="message">{message}</h3>
-    </main>
-  );
-}
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server running on port ${PORT}`);
+});

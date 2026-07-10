@@ -4,12 +4,11 @@ import { useState } from "react";
 
 export default function Home() {
 
-  const [file, setFile] = useState(null);
+  const [file, setFile] = useState<File | null>(null);
 
-  const [previewData, setPreviewData] = useState([]);
+  const [previewData, setPreviewData] = useState<any[]>([]);
 
-  const [resultData, setResultData] = useState([]);
-
+  const [resultData, setResultData] = useState<any[]>([]);
   const [message, setMessage] = useState("");
 
   const [loading, setLoading] = useState(false);
@@ -49,7 +48,7 @@ export default function Home() {
 
 
       const response = await fetch(
-        "http://localhost:5000/upload",
+        "https://groweasy-backend-wpmu.onrender.com/upload",
         {
           method:"POST",
           body:formData
@@ -114,8 +113,7 @@ export default function Home() {
 
       const response = await fetch(
 
-        "https://groweasy-backend-wpmu.onrender.com",
-
+        "https://groweasy-backend-wpmu.onrender.com/extract",
         {
 
           method:"POST",
@@ -212,11 +210,11 @@ export default function Home() {
             <tr>
 
               {
-                Object.keys(data[0]).map((key)=>(
+                Object.values(row as Record<string, unknown>).map((value, i) => (
 
-                  <th key={key}>
-                    {key}
-                  </th>
+                  <td key={i}>
+                    {String(value ?? "")}
+                  </td>
 
                 ))
               }
@@ -310,9 +308,11 @@ export default function Home() {
 
           accept=".csv"
 
-          onChange={(e)=>
-            setFile(e.target.files[0])
-          }
+          onChange={(e) => {
+            if (e.target.files && e.target.files.length > 0) {
+              setFile(e.target.files[0]);
+            }
+          }}
 
         />
 
