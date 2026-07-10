@@ -191,84 +191,53 @@ export default function Home() {
 
 
 
-  const renderTable = (data: any[]) => {
+ const renderTable = (data: any[]) => {
 
+  if (!data.length) return null;
 
-    if(!data.length) return null;
+  return (
 
+    <div className="table-container">
 
-    return (
+      <table>
 
-      <div className="table-container">
+        <thead>
+          <tr>
+            {Object.keys(data[0]).map((key) => (
+              <th key={key}>
+                {key}
+              </th>
+            ))}
+          </tr>
+        </thead>
 
+        <tbody>
 
-        <table>
+          {data.map((row, index) => (
 
+            <tr key={index}>
 
-          <thead>
+              {Object.values(row as Record<string, unknown>).map((value, i) => (
 
-            <tr>
+                <td key={i}>
+                  {String(value ?? "")}
+                </td>
 
-              {
-                Object.values(row as Record<string, unknown>).map((value, i) => (
-
-                  <td key={i}>
-                    {String(value ?? "")}
-                  </td>
-
-                ))
-              }
+              ))}
 
             </tr>
 
-          </thead>
+          ))}
 
+        </tbody>
 
+      </table>
 
-          <tbody>
+    </div>
 
+  );
 
-            {
-
-              data.map((row,index)=>(
-
-
-                <tr key={index}>
-
-
-                  {
-
-                    Object.values(row).map((value,i)=>(
-
-                      <td key={i}>
-                        {value}
-                      </td>
-
-                    ))
-
-                  }
-
-
-                </tr>
-
-
-              ))
-
-            }
-
-
-          </tbody>
-
-
-        </table>
-
-
-      </div>
-
-    );
-
-
-  };
+};
 
 
 
