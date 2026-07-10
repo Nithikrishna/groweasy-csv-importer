@@ -186,7 +186,41 @@ export default function Home() {
   };
 
 
+ const downloadCSV = () => {
 
+  if (!resultData.length) return;
+
+  const headers = Object.keys(resultData[0]);
+
+  const rows = resultData.map((row) =>
+    headers.map((header) => `"${String((row as Record<string, unknown>)[header] ?? "")}"`).join(",")
+  );
+
+  const csvContent = [
+    headers.join(","),
+    ...rows
+  ].join("\n");
+
+  const blob = new Blob([csvContent], {
+    type: "text/csv;charset=utf-8;"
+  });
+
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = "crm_results.csv";
+
+  document.body.appendChild(link);
+
+  link.click();
+
+  document.body.removeChild(link);
+
+  URL.revokeObjectURL(url);
+
+};
 
 
 
@@ -402,6 +436,11 @@ export default function Home() {
             </div>
 
           }
+          <button onClick={downloadCSV}>
+
+            📥 Download CRM CSV
+
+          </button>
 
 
 
