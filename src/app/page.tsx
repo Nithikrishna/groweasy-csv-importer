@@ -6,9 +6,10 @@ export default function Home() {
 
   const [file, setFile] = useState<File | null>(null);
 
-  const [previewData, setPreviewData] = useState<any[]>([]);
+  const [previewData, setPreviewData] = useState<Record<string, unknown>[]>([]);
 
-  const [resultData, setResultData] = useState<any[]>([]);
+  const [resultData, setResultData] = useState<Record<string, unknown>[]>([]);
+
   const [message, setMessage] = useState("");
 
   const [loading, setLoading] = useState(false);
@@ -20,8 +21,11 @@ export default function Home() {
 
 
 
-  const handleUpload = async () => {
+  // ==========================
+  // Upload CSV
+  // ==========================
 
+  const handleUpload = async () => {
 
     if (!file) {
 
@@ -31,52 +35,48 @@ export default function Home() {
 
     }
 
-
     const formData = new FormData();
 
     formData.append("file", file);
 
-
-
     try {
-
 
       setLoading(true);
 
       setMessage("Uploading CSV...");
 
-
-
       const response = await fetch(
+
         "https://groweasy-backend-wpmu.onrender.com/upload",
+
         {
-          method:"POST",
-          body:formData
+          method: "POST",
+          body: formData
         }
+
       );
-
-
 
       const data = await response.json();
 
-
-
-      if(data.success){
-
+      if (data.success) {
 
         setPreviewData(data.records);
 
         setMessage(
+
           "CSV uploaded successfully. Review and confirm import."
+
         );
 
+      } else {
+
+        setMessage(data.message);
 
       }
 
-
     }
 
-    catch(error){
+    catch (error) {
 
       console.log(error);
 
@@ -84,8 +84,7 @@ export default function Home() {
 
     }
 
-
-    finally{
+    finally {
 
       setLoading(false);
 
@@ -95,36 +94,35 @@ export default function Home() {
 
 
 
+  // ==========================
+  // AI Extraction
+  // ==========================
 
+  const handleConfirm = async () => {
 
-
-
-  const handleConfirm = async()=>{
-
-
-    try{
-
+    try {
 
       setLoading(true);
 
       setMessage("AI is processing your CSV...");
 
-
-
       const response = await fetch(
 
         "https://groweasy-backend-wpmu.onrender.com/extract",
+
         {
 
-          method:"POST",
+          method: "POST",
 
-          headers:{
-            "Content-Type":"application/json"
+          headers: {
+
+            "Content-Type": "application/json"
+
           },
 
-          body:JSON.stringify({
+          body: JSON.stringify({
 
-            records:previewData
+            records: previewData
 
           })
 
@@ -132,42 +130,33 @@ export default function Home() {
 
       );
 
-
-
       const data = await response.json();
 
-
-
-      if(data.success){
-
+      if (data.success) {
 
         setResultData(data.data);
 
-
-
         setStats({
 
-          imported:data.imported,
+          imported: data.imported,
 
-          skipped:data.skipped
+          skipped: data.skipped
 
         });
 
-
-
-        setMessage(
-          "Import completed successfully!"
-        );
-
+        setMessage("Import completed successfully!");
 
       }
 
+      else {
 
+        setMessage(data.message);
+
+      }
 
     }
 
-
-    catch(error){
+    catch (error) {
 
       console.log(error);
 
@@ -175,120 +164,151 @@ export default function Home() {
 
     }
 
-
-    finally{
+    finally {
 
       setLoading(false);
 
     }
 
+  };
+    // ==========================
+  // Download Result CSV
+  // ==========================
+
+  const downloadCSV = () => {
+
+    if (!resultData.length) return;
+
+    const headers = Object.keys(resultData[0]);
+
+    const rows = resultData.map((row) =>
+
+      headers
+        .map((header) => `"${String(row[header] ?? "")}"`)
+        .join(",")
+
+    );
+
+    const csvContent = [
+
+      headers.join(","),
+
+      ...rows
+
+    ].join("\n");
+
+    const blob = new Blob(
+
+      [csvContent],
+
+      {
+
+        type: "text/csv;charset=utf-8;"
+
+      }
+
+    );
+
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+
+    link.href = url;
+
+    link.download = "crm_results.csv";
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
 
   };
 
 
- const downloadCSV = () => {
 
-  if (!resultData.length) return;
+  // ==========================
+  // Render Table
+  // ==========================
 
-  const headers = Object.keys(resultData[0]);
+  const renderTable = (data: Record<string, unknown>[]) => {
 
-  const rows = resultData.map((row) =>
-    headers.map((header) => `"${String((row as Record<string, unknown>)[header] ?? "")}"`).join(",")
-  );
+    if (!data.length) return null;
 
-  const csvContent = [
-    headers.join(","),
-    ...rows
-  ].join("\n");
+    return (
 
-  const blob = new Blob([csvContent], {
-    type: "text/csv;charset=utf-8;"
-  });
+      <div className="table-container">
 
-  const url = URL.createObjectURL(blob);
+        <table>
 
-  const link = document.createElement("a");
+          <thead>
 
-  link.href = url;
-  link.download = "crm_results.csv";
+            <tr>
 
-  document.body.appendChild(link);
+              {
 
-  link.click();
+                Object.keys(data[0]).map((key) => (
 
-  document.body.removeChild(link);
+                  <th key={key}>
 
-  URL.revokeObjectURL(url);
+                    {key}
 
-};
+                  </th>
 
+                ))
 
-
-
- const renderTable = (data: any[]) => {
-
-  if (!data.length) return null;
-
-  return (
-
-    <div className="table-container">
-
-      <table>
-
-        <thead>
-          <tr>
-            {Object.keys(data[0]).map((key) => (
-              <th key={key}>
-                {key}
-              </th>
-            ))}
-          </tr>
-        </thead>
-
-        <tbody>
-
-          {data.map((row, index) => (
-
-            <tr key={index}>
-
-              {Object.values(row as Record<string, unknown>).map((value, i) => (
-
-                <td key={i}>
-                  {String(value ?? "")}
-                </td>
-
-              ))}
+              }
 
             </tr>
 
-          ))}
+          </thead>
 
-        </tbody>
+          <tbody>
 
-      </table>
+            {
 
-    </div>
+              data.map((row, index) => (
 
-  );
+                <tr key={index}>
 
-};
+                  {
 
+                    Object.values(row).map((value, i) => (
 
+                      <td key={i}>
 
+                        {String(value ?? "")}
 
+                      </td>
 
+                    ))
 
+                  }
 
-  return (
+                </tr>
+
+              ))
+
+            }
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    );
+
+  };
+    return (
 
     <main className="container">
-
 
       <h1>
         🤖 AI CSV Importer
       </h1>
-
-
 
       <p className="subtitle">
         Upload CSV files and automatically convert them into GrowEasy CRM format.
@@ -296,14 +316,11 @@ export default function Home() {
 
 
 
-
       <section className="card">
-
 
         <h2>
           Step 1: Upload CSV
         </h2>
-
 
         <input
 
@@ -312,24 +329,30 @@ export default function Home() {
           accept=".csv"
 
           onChange={(e) => {
+
             if (e.target.files && e.target.files.length > 0) {
+
               setFile(e.target.files[0]);
+
             }
+
           }}
 
         />
 
-
         {
-          file &&
 
-          <p>
-            Selected file: {file.name}
-          </p>
+          file && (
+
+            <p>
+
+              Selected file: <strong>{file.name}</strong>
+
+            </p>
+
+          )
 
         }
-
-
 
         <button onClick={handleUpload}>
 
@@ -337,119 +360,103 @@ export default function Home() {
 
         </button>
 
-
-
       </section>
 
 
 
-
-
-
-
       {
-        previewData.length>0 &&
 
+        previewData.length > 0 && (
 
-        <section className="card">
+          <section className="card">
 
+            <h2>
+              Step 2: CSV Preview
+            </h2>
 
-          <h2>
-            Step 2: CSV Preview
-          </h2>
+            {renderTable(previewData)}
 
+            <button onClick={handleConfirm}>
 
-          {renderTable(previewData)}
+              Confirm Import
 
+            </button>
 
+          </section>
 
-          <button onClick={handleConfirm}>
-
-            Confirm Import
-
-          </button>
-
-
-        </section>
+        )
 
       }
 
 
 
-
-
-
-
       {
-        loading &&
 
-        <div className="loading">
+        loading && (
 
-          Processing...
+          <div className="loading">
 
-        </div>
+            Processing...
+
+          </div>
+
+        )
 
       }
 
 
 
-
-
-
       {
-        resultData.length>0 &&
 
+        resultData.length > 0 && (
 
-        <section className="card">
+          <section className="card">
 
+            <h2>
+              Step 3: CRM Result
+            </h2>
 
-          <h2>
-            Step 3: CRM Result
-          </h2>
+            {renderTable(resultData)}
 
+            {
 
-          {renderTable(resultData)}
+              stats && (
 
+                <div className="stats">
 
+                  <h3>
+                    Import Summary
+                  </h3>
 
-          {
+                  <p>
 
-            stats &&
+                    ✅ Imported: {stats.imported}
 
-            <div className="stats">
+                  </p>
 
-              <h3>
-                Import Summary
-              </h3>
+                  <p>
 
+                    ⚠️ Skipped: {stats.skipped}
 
-              <p>
-                ✅ Imported: {stats.imported}
-              </p>
+                  </p>
 
+                </div>
 
-              <p>
-                ⚠️ Skipped: {stats.skipped}
-              </p>
+              )
 
+            }
 
-            </div>
+            <button onClick={downloadCSV}>
 
-          }
-          <button onClick={downloadCSV}>
+              📥 Download CRM CSV
 
-            📥 Download CRM CSV
+            </button>
 
-          </button>
+          </section>
 
-
-
-        </section>
+        )
 
       }
-
-
-
 
 
 
@@ -458,9 +465,6 @@ export default function Home() {
         {message}
 
       </h3>
-
-
-
 
     </main>
 
