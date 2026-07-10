@@ -1,50 +1,227 @@
-# 🤖 AI CSV Importer
+# 🤖 AI-Powered CSV Importer
 
-An AI-powered CSV importer that intelligently extracts CRM lead information from different CSV formats and converts them into a standardized GrowEasy CRM format.
-
-The application can handle CSV files from different sources such as marketing campaigns, Facebook lead exports, real estate CRM exports, and manually created spreadsheets.
+An AI-powered CSV Importer that intelligently converts CSV files from different sources into a standardized GrowEasy CRM format using **Gemini AI**.
 
 ---
 
-## 🚀 Features
+## 🌐 Live Demo
 
-### CSV Upload
-- Upload any valid CSV file
-- Supports different column names and structures
+### Frontend
+https://groweasy-csv-importer-mv69.vercel.app
+
+### Backend
+https://groweasy-backend-wpmu.onrender.com
+
+---
+
+## 📂 GitHub Repository
+
+https://github.com/Nithikrishna/groweasy-csv-importer
+
+---
+
+# ✨ Features
+
+- 📤 Upload CSV files
+- 📄 Preview uploaded CSV
+- 🤖 AI-powered CRM field extraction using Gemini AI
+- 🔄 Automatically map different CSV column names
+- 📊 Display standardized CRM records
+- 📈 Import summary (Imported / Skipped)
+- ☁️ Fully deployed using Vercel and Render
+
+---
+
+# 🛠 Tech Stack
+
+### Frontend
+- Next.js
+- React
+- TypeScript
+- CSS
+
+### Backend
+- Node.js
+- Express.js
+- Multer
+- csv-parser
+
+### AI
+- Google Gemini API
+
+### Deployment
+- Vercel
+- Render
+
+### Version Control
+- Git
+- GitHub
+
+---
+
+# 🏗 Project Architecture
+
+```
+CSV File
+    │
+    ▼
+Next.js Frontend
+    │
+POST /upload
+    ▼
+Express Backend
+    │
+CSV Parsing
+    │
+    ▼
+Gemini AI
+    │
+CRM JSON
+    │
+    ▼
+Display Results
+```
+
+---
+
+# 🤖 AI Prompt Strategy
+
+The application uses Gemini AI to intelligently identify different CSV column names and convert them into a standardized CRM schema.
 
 Examples:
 
-- Facebook Lead Export
-- Google Ads Export
-- Real Estate CRM Export
-- Sales Reports
-- Custom spreadsheets
+| CSV Column | CRM Field |
+|------------|-----------|
+| customer_name | name |
+| email_address | email |
+| phone_number | mobile |
+| business_name | company |
+| location | city |
+| role | description |
+
+The AI can process CSV files from multiple sources without requiring a fixed column format.
 
 ---
 
-### Smart CSV Parsing
+# 📸 Screenshots
 
-The system converts CSV rows into structured data using:
+## Home Page
 
-- CSV parsing
-- Intelligent field detection
-- AI-powered extraction
+![Home](public/screenshots/home.png)
 
 ---
 
-### AI CRM Field Mapping
+## CSV Preview
 
-Automatically maps different column names into CRM fields:
-
-| CSV Column Example | CRM Field |
-|---|---|
-| Name / customer_name / lead_name | name |
-| Email / email_address / contact_mail | email |
-| Phone / whatsapp / mobile | mobile number |
-| Company / firm / business_name | company |
-| City / location / address | city |
-| Remarks / notes | crm_note |
+![Preview](public/screenshots/preview.png)
 
 ---
 
-## 🏗️ Architecture
+## CRM Result
+
+![Result](public/screenshots/result.png)
+
+---
+
+# 🚀 Installation
+
+Clone the repository
+
+```bash
+git clone https://github.com/Nithikrishna/groweasy-csv-importer.git
+```
+
+Install frontend
+
+```bash
+npm install
+```
+
+Install backend
+
+```bash
+cd backend
+npm install
+```
+
+Create a `.env` file inside the backend folder
+
+```env
+GEMINI_API_KEY=YOUR_API_KEY
+```
+
+Run backend
+
+```bash
+node server.js
+```
+
+Run frontend
+
+```bash
+npm run dev
+```
+
+---
+
+# 📁 Project Structure
+
+```
+groweasy-csv-importer/
+
+├── backend/
+│   ├── services/
+│   │     aiService.js
+│   ├── server.js
+│   └── package.json
+│
+├── public/
+│   └── screenshots/
+│
+├── src/
+│   └── app/
+│       ├── page.tsx
+│       └── globals.css
+│
+├── package.json
+└── README.md
+```
+
+---
+
+# 📊 Workflow
+
+1. Upload CSV
+2. Parse CSV
+3. Preview Data
+4. Send records to Gemini AI
+5. AI extracts CRM fields
+6. Display standardized CRM records
+7. Show import statistics
+
+---
+
+# 🔮 Future Improvements
+
+- Drag & Drop CSV Upload
+- Download CRM CSV
+- Better Lead Validation
+- Dark Mode
+- Authentication
+- Database Integration
+- Search & Filter
+- Pagination
+
+---
+
+# 👩‍💻 Developed By
+
+**Nithi Krishna**
+
+B.Tech Robotics & Artificial Intelligence
+
+Rajiv Gandhi Institute of Technology, Kottayam
+
+---
+
+⭐ If you found this project useful, consider giving it a star!
